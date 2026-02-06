@@ -1,7 +1,25 @@
 import amqp from "amqplib"
 
+/**
+ * Modul ini bertanggung jawab untuk membuat dan me-manage *singleton* koneksi RabbitMQ.
+ *
+ * Kenapa dibuat singleton?
+ * - Koneksi RabbitMQ relatif mahal untuk dibuat berulang-ulang.
+ * - Producer/consumer dapat membuat banyak channel di atas satu koneksi yang sama.
+ *
+ * Catatan:
+ * - Kalau koneksi terputus (`close`/`error`), kita reset ke `null` supaya pemanggilan berikutnya bisa reconnect.
+ * - URL diambil dari env `RABBITMQ_URL` dengan default `amqp://localhost:5672`.
+ */
 let connection: any = null
 
+/**
+ * Create (atau reuse) koneksi RabbitMQ.
+ *
+ * Flow:
+ * - Jika `connection` sudah ada -> reuse
+ * - Jika belum -> connect, pasang listener `close` dan `error`, lalu return connection
+ */
 export const createRabbitMQConnection = async () => {
     // Reuse existing connection
     if (connection) {
@@ -31,4 +49,8 @@ export const createRabbitMQConnection = async () => {
     }
 }
 
+/**
+ * Alias yang lebih “deskriptif” untuk dipakai module lain.
+ * Secara implementasi sama persis dengan `createRabbitMQConnection`.
+ */
 export const getRabbitMQConnection = createRabbitMQConnection
